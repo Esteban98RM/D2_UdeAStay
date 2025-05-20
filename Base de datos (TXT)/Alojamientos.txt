@@ -1,0 +1,2 @@
+ALO-01-A|Casa Campestre|1035328230|Antioquia|Guatape|C|Calle 1 #2-3|150000|piscina, parqueadero
+ALO-02-B|Apto Moderno|1234567890|Antioquia|Medellin|A|Carrera 4 #5-6|200000|ascensor, aire acondicionado
