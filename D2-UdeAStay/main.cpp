@@ -6,6 +6,7 @@ using namespace std;
 
 int main() {
     Sistema sistema;
+
     sistema.cargarDatos();
 
     string documento, clave, tipoRol;
