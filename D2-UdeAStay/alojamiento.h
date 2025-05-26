@@ -1,13 +1,22 @@
+
+
+    // string* fechasReservadas;
+    // int capacidadFechas;
+    // int numFechasReservadas;
+
+
 #ifndef ALOJAMIENTO_H
 #define ALOJAMIENTO_H
 
+#include "anfitrion.h"
+
+#include "fecha.h"
 #include <string>
 
-using namespace std;
+class Reservacion;
 
-class Alojamiento{
+class Alojamiento {
 private:
-
     string codigo;
     string nombre;
     string documento;
@@ -21,35 +30,34 @@ private:
     int capacidad;
     int numAmenidades;
 
-public:
+    //Anfitrion* anfitrion;
 
-    //Constructor
+public:
     Alojamiento();
     Alojamiento(const string& cod, const string& nom, const string& docAnf, const string& dep,
                 const string& mun, char tip, const string& dir, float prec, const string& ameStr);
-
-    //Constructor Copia
     Alojamiento(const Alojamiento& otro);
-
-    //Sobrecarga de operador
     Alojamiento& operator=(const Alojamiento& otro);
-
-    //Destructor
     ~Alojamiento();
 
-    //Metodos para menejar las amenidades
+    // Métodos para amenidades
     void agregarAmenidad(const string& amenidad);
     const string& obtenerAmenidad(int index) const;
     int getNumAmenidades() const { return numAmenidades; }
     void procesarAmenidades(const string& amenidadesStr);
 
-    //Getters
+    // Getters
     const string& getCodigo() const { return codigo; }
     const string& getNombre() const { return nombre; }
     char getTipo() const { return tipo; }
     float getPrecio() const { return precio; }
+    const string getMunicipio() const { return municipio; }
+    const string getDocumentoAnfitrion() const { return documento; }
 
-
+    // Métodos principales
+    bool estaDisponible(const Alojamiento& a, const Fecha& entrada, int noches,
+                        const Reservacion* reservaciones, int numReservas) const;
+    void mostrar() const;
 };
 
 #endif // ALOJAMIENTO_H

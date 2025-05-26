@@ -6,10 +6,9 @@ using namespace std;
 
 int main() {
     Sistema sistema;
-
     sistema.cargarDatos();
 
-    string documento, clave, tipoRol;
+    string documento, clave;
 
     cout << "Sistema de Autenticacion\n";
     cout << "Usuario: ";
@@ -17,11 +16,7 @@ int main() {
     cout << "Clave: ";
     cin >> clave;
 
-    if (sistema.autenticarUsuario(documento, clave, tipoRol)) {
-        cout << "\nBienvenido " << tipoRol << "!\n";
-    } else {
-        cout << "\nCredenciales incorrectas\n";
-    }
+    sistema.iniciarSesion(documento, clave);
 
     return 0;
 }

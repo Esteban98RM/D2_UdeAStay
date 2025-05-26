@@ -14,6 +14,7 @@ class GestionArchivos {
 private:
 
     int contarLineas(const string& nombreArchivo);
+    string formatearMetodoPago(char metodo);
 
 public:
 
@@ -25,6 +26,10 @@ public:
     void cargarHuespedes(Huesped*& huespedes, int& cantidad);
     void cargarAlojamientos(Alojamiento*& alojamientos, int& cantidad);
     void cargarReservaciones(Reservacion*& reservaciones, int& cantidad);
+
+    // Nuevos métodos para guardar
+    void guardarReservacion(const Reservacion& reservacion);
+    void actualizarArchivoReservaciones(Reservacion* reservaciones, int cantidad);
 
 };
 
