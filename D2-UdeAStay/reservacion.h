@@ -5,8 +5,15 @@
 
 using namespace std;
 
+class Alojamiento;
+class Sistema;
+class Huesped;
+class Fecha;
+
 class Reservacion {
 private:
+
+    Huesped* huesped;
 
     string codigo;
     string fecha_entrada;
@@ -22,6 +29,11 @@ private:
 
     void redimensionarAnotaciones(size_t nueva_capacidad);
     void copiarAnotaciones(const char* nuevas_anotaciones, size_t longitud);
+
+    float precioMax;
+    float puntuacionMin;
+    int cantidadDisponible;
+    Alojamiento* alojamientoAsignado;
 
 public:
 
@@ -56,6 +68,29 @@ public:
 
     void reservarEspacio(size_t nueva_capacidad);
     void copiarAnotacion(const char* nueva_anotacion);
+
+/*    // Método estático para filtrar disponibilidad
+    static Alojamiento* filtrarDisponiblesPorFecha(Alojamiento* candidatos,
+                                                   int nCandidatos,
+                                                   const Fecha& fechaEntrada,
+                                                   int noches,
+                                                   Reservacion* reservaciones,
+                                                   int nReservaciones,
+                                                   int& nDisponibles)*/;
+
+    static Alojamiento* filtrarDisponiblesPorFecha(
+        Alojamiento* candidatos,
+        int nCandidatos,
+        const Fecha& fechaEntrada,
+        int noches,
+        const Reservacion* reservaciones,  // Cambiado a const
+        int nReservaciones,
+        int& nDisponibles
+        );
+
+    // Validar si hay conflicto de fechas
+    static bool hayConflictoFechas(const Fecha& fechaEntrada1, int noches1,
+                                   const Fecha& fechaEntrada2, int noches2);
 };
 
 #endif // RESERVACION_H

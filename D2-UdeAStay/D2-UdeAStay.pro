@@ -6,6 +6,7 @@ CONFIG -= qt
 SOURCES += \
         alojamiento.cpp \
         anfitrion.cpp \
+        fecha.cpp \
         gestionarchivos.cpp \
         huesped.cpp \
         main.cpp \
@@ -15,6 +16,7 @@ SOURCES += \
 HEADERS += \
     alojamiento.h \
     anfitrion.h \
+    fecha.h \
     gestionarchivos.h \
     huesped.h \
     reservacion.h \

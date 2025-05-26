@@ -1,4 +1,4 @@
-#include "gestionArchivos.h"
+#include "gestionarchivos.h"
 #include "anfitrion.h"
 #include "huesped.h"
 #include "alojamiento.h"
@@ -235,4 +235,63 @@ void GestionArchivos::cargarReservaciones(Reservacion*& reservaciones, int& cant
     }
 
     cantidad = i;
+}
+
+void GestionArchivos::guardarReservacion(const Reservacion& reservacion) {
+    ofstream archivo("Reservaciones.txt", ios::app);
+    if (!archivo.is_open()) {
+        cout << "Error: No se pudo abrir el archivo para guardar la reservación.\n";
+        return;
+    }
+
+    // Formatear método de pago para archivo
+    string metodoPagoStr = formatearMetodoPago(reservacion.getMetodoPago());
+
+    // Escribir en formato específico
+    archivo << reservacion.getCodigo() << "|"
+            << reservacion.getFechaEntrada() << "|"
+            << reservacion.getDuracion() << "|"
+            << reservacion.getCodigoAlojamiento() << "|"
+            << reservacion.getDocumento() << "|"
+            << metodoPagoStr << "|"
+            << reservacion.getFechaPago() << "|"
+            << fixed << setprecision(0) << reservacion.getMonto() << "|"
+            << reservacion.getAnotacion() << "\n";
+
+    archivo.close();
+    cout << "Reservación guardada exitosamente en el archivo.\n";
+}
+
+void GestionArchivos::actualizarArchivoReservaciones(Reservacion* reservaciones, int cantidad) {
+    ofstream archivo("Reservaciones.txt");
+    if (!archivo.is_open()) {
+        cout << "Error: No se pudo actualizar el archivo de reservaciones.\n";
+        return;
+    }
+
+    for (int i = 0; i < cantidad; i++) {
+        string metodoPagoStr = formatearMetodoPago(reservaciones[i].getMetodoPago());
+
+        archivo << reservaciones[i].getCodigo() << "|"
+                << reservaciones[i].getFechaEntrada() << "|"
+                << reservaciones[i].getDuracion() << "|"
+                << reservaciones[i].getCodigoAlojamiento() << "|"
+                << reservaciones[i].getDocumento() << "|"
+                << metodoPagoStr << "|"
+                << reservaciones[i].getFechaPago() << "|"
+                << fixed << setprecision(0) << reservaciones[i].getMonto() << "|"
+                << reservaciones[i].getAnotacion();
+
+        if (i < cantidad - 1) archivo << "\n";
+    }
+
+    archivo.close();
+}
+
+string GestionArchivos::formatearMetodoPago(char metodo) {
+    switch (metodo) {
+    case 'T': return "TC";  // Tarjeta de Crédito
+    case 'P': return "PSE"; // PSE
+    default: return "TC";   // Por defecto
+    }
 }
