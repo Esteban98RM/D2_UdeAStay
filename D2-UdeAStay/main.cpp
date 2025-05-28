@@ -8,15 +8,30 @@ int main() {
     Sistema sistema;
     sistema.cargarDatos();
 
-    string documento, clave;
+    bool salirPrograma = false;
 
-    cout << "Sistema de Autenticacion\n";
-    cout << "Usuario: ";
-    cin >> documento;
-    cout << "Clave: ";
-    cin >> clave;
+    while (!salirPrograma) {
+        string documento, clave;
+        bool sesionIniciada = false;
 
-    sistema.iniciarSesion(documento, clave);
+        cout << "\n=========================================\n";
+        cout << "        SISTEMA DE AUTENTICACION\n";
+        cout << "=========================================\n";
+
+        while (!sesionIniciada) {
+            cout << "\nIngrese sus credenciales\n";
+            cout << "Usuario (documento): ";
+            cin >> documento;
+            cout << "Clave: ";
+            cin >> clave;
+
+            sesionIniciada = sistema.iniciarSesion(documento, clave);
+
+            if (!sesionIniciada) {
+                cout << "\nCredenciales incorrectas. Intentelo nuevamente.\n";
+            }
+        }
+    }
 
     return 0;
 }

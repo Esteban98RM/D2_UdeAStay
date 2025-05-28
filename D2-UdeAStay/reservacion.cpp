@@ -2,8 +2,10 @@
 #include "alojamiento.h"
 #include "sistema.h"
 #include "fecha.h"
+#include "huesped.h"
 
 #include <cstring>
+#include <iomanip>
 
 const size_t MAX_CARACTERES = 1000;
 
@@ -54,6 +56,7 @@ Reservacion& Reservacion::operator=(const Reservacion& otro) {
 // Destructor
 Reservacion::~Reservacion() {
     delete[] anotacion;
+    anotacion = nullptr;
 }
 
 // Metodos privados para manejo de memoria
@@ -225,4 +228,62 @@ bool Reservacion::hayConflictoFechas(const Fecha& fechaEntrada1, int noches1,
     cout << "Hay conflicto? " << (conflicto ? "Si" : "No") << endl;
 
     return conflicto;
+}
+
+void Reservacion::mostrarDetalle(int numero, bool esParaAnfitrion, Sistema* sistema) const {
+    Fecha fechaEntrada(this->getFechaEntrada());
+    Fecha fechaFinal = fechaEntrada.sumarDias(this->getDuracion());
+
+    cout << "--- RESERVACION " << numero << " ---\n";
+    cout << "Codigo: " << this->getCodigo() << "\n";
+
+    if (esParaAnfitrion) {
+        // Vista para anfitrion: incluye datos del huesped
+        cout << "Alojamiento: " << this->getCodigoAlojamiento() << "\n";
+        cout << "Huesped: " << obtenerNombreHuesped(sistema) << "\n";
+        cout << "Documento Huesped: " << this->getDocumento() << "\n";
+    } else {
+        // Vista para huesped: incluye estado y metodo de pago
+        cout << "Alojamiento: " << this->getCodigoAlojamiento() << "\n";
+        cout << "Estado: " << (fechaFinal.yaPaso() ? "COMPLETADA" : "PENDIENTE") << "\n";
+        cout << "Metodo de Pago: ";
+
+        switch(this->getMetodoPago()) {
+        case 'T':
+        case 't':
+            cout << "Tarjeta de Credito\n";
+            break;
+        case 'P':
+        case 'p':
+            cout << "PSE\n";
+            break;
+        default:
+            cout << "No especificado\n";
+            break;
+        }
+        cout << "Fecha de Pago: " << this->getFechaPago() << "\n";
+    }
+
+    cout << "Fecha Entrada: " << fechaEntrada.toString() << "\n";
+    cout << "Fecha Salida: " << fechaFinal.toString() << "\n";
+    cout << "Duracion: " << this->getDuracion() << " noches\n";
+    cout << "Monto: $" << fixed << setprecision(0) << this->getMonto() << "\n";
+
+    string anotacion = this->getAnotacion();
+    if (!anotacion.empty()) {
+        cout << "Anotaciones: " << anotacion << "\n";
+    }
+    cout << "--------------------------------\n";
+}
+
+string Reservacion::obtenerNombreHuesped(Sistema* sistema) const {
+    const Huesped* huespedes = sistema->getHuespedes();
+    int totalHuespedes = sistema->getNumHuespedes();
+
+    for (int i = 0; i < totalHuespedes; i++) {
+        if (huespedes[i].getDocumento() == this->getDocumento()) {
+            return huespedes[i].getNombre();
+        }
+    }
+    return "No encontrado";
 }

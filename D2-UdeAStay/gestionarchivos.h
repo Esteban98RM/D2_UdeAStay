@@ -27,9 +27,19 @@ public:
     void cargarAlojamientos(Alojamiento*& alojamientos, int& cantidad);
     void cargarReservaciones(Reservacion*& reservaciones, int& cantidad);
 
-    // Nuevos métodos para guardar
+    // Nuevos metodos para guardar
     void guardarReservacion(const Reservacion& reservacion);
     void actualizarArchivoReservaciones(Reservacion* reservaciones, int cantidad);
+    bool guardarReservacionesHistorico(Reservacion* reservaciones, int cantidad,
+    const string& fechaCorte);
+
+    // Nuevos metodos para el ID
+    int cargarUltimoIdReservacion();
+    void guardarUltimoIdReservacion(int id);
+
+    // Nuevos metodos para manejo de fecha de corte historico
+    string cargarUltimaFechaCorteHistorico();
+    void guardarUltimaFechaCorteHistorico(const string& fecha);
 
 };
 

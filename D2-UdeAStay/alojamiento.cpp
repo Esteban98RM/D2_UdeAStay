@@ -140,16 +140,6 @@ bool Alojamiento::estaDisponible(const Alojamiento& a, const Fecha& entrada,
     return true;
 }
 
-// void Alojamiento::mostrar() const {
-//     cout << "Nombre: " << nombre << endl;
-//     cout << "Municipio: " << municipio << endl;
-//     cout << "Precio por noche: $" << precio << endl;
-//     //cout << "Puntuacion: " <<  << "/5.0" << endl;
-//     //cout << "Capacidad: " << capacidad << " personas" << endl;
-//     cout << "Codigo: " << codigo << endl;
-//     cout << "---------------------------" << endl;
-// }
-
 void Alojamiento::mostrar() const {
     cout << "Nombre: " << nombre << endl;
     cout << "Municipio: " << municipio << endl;

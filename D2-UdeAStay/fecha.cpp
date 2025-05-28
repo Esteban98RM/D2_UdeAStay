@@ -152,6 +152,14 @@ bool Fecha::operator>(const Fecha& otra) const {
     return otra < *this;
 }
 
+bool Fecha::operator<=(const Fecha& otra) const {
+    return !(*this > otra);
+}
+
+bool Fecha::operator>=(const Fecha& otra) const {
+    return !(*this < otra);
+}
+
 ostream& operator<<(ostream& os, const Fecha& f) {
     os << f.toString();
     return os;

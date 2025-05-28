@@ -83,8 +83,9 @@ void GestionArchivos::cargarHuespedes(Huesped*& huespedes, int& cantidad) {
 
     while (getline(archivo, linea)) {
         istringstream ss(linea);
-        string documento, clave, antiguedadStr, puntuacionStr;
+        string nombre, documento, clave, antiguedadStr, puntuacionStr;
 
+        getline(ss, nombre, '|');
         getline(ss, documento, '|');
         getline(ss, clave, '|');
         getline(ss, antiguedadStr, '|');
@@ -93,12 +94,13 @@ void GestionArchivos::cargarHuespedes(Huesped*& huespedes, int& cantidad) {
         int antiguedad = stoi(antiguedadStr);
         float puntuacion = stof(puntuacionStr);
 
-        //huespedes[i++] = Huesped(documento, clave, antiguedad, puntuacion);
+        //huespedes[i++] = Huesped(nombre, documento, clave, antiguedad, puntuacion);
 
-        huespedes[i] = Huesped(documento, clave, antiguedad, puntuacion);
+        huespedes[i] = Huesped(nombre, documento, clave, antiguedad, puntuacion);
 
-        // Impresión de verificación
+        // Impresion de verificacion
         cout << "Huesped #" << (i + 1) << ":" << endl;
+        cout << "  - Nombre: " << nombre << endl;
         cout << "  - Documento: " << documento << endl;
         cout << "  - Clave: " << clave << endl;
         cout << "  - Antiguedad: " << antiguedad << endl;
@@ -151,7 +153,7 @@ void GestionArchivos::cargarAlojamientos(Alojamiento*& alojamientos, int& cantid
         alojamientos[i] = Alojamiento(codigo, nombre, documento, departamento, municipio,
                                       tipo, direccion, precio, amenidades);
 
-        // Impresión de verificacion
+        // Impresion de verificacion
         cout << "Alojamiento #" << (i + 1) << ":" << endl;
         cout << "  - Codigo: " << codigo << endl;
         cout << "  - Nombre: " << nombre << endl;
@@ -214,11 +216,11 @@ void GestionArchivos::cargarReservaciones(Reservacion*& reservaciones, int& cant
         reservaciones[i] = Reservacion(codigo, fecha_entrada, duracion_estadia,codigo_alojamiento, documento, metodo_pago,
                                        fecha_pago, monto, anotacion);
 
-        // Formatear el monto para mostrar sin notación científica
+        // Formatear el monto para mostrar sin notacion científica
         ostringstream montoFormateado;
         montoFormateado << fixed << setprecision(0) << monto;
 
-        // Impresión de verificación mejorada
+        // Impresion de verificacion mejorada
         cout << "Reservacion #" << (i + 1) << ":" << endl;
         cout << "  - Codigo: " << codigo << endl;
         cout << "  - Fecha entrada: " << fecha_entrada << endl;
@@ -240,7 +242,7 @@ void GestionArchivos::cargarReservaciones(Reservacion*& reservaciones, int& cant
 void GestionArchivos::guardarReservacion(const Reservacion& reservacion) {
     ofstream archivo("Reservaciones.txt", ios::app);
     if (!archivo.is_open()) {
-        cout << "Error: No se pudo abrir el archivo para guardar la reservación.\n";
+        cout << "Error: No se pudo abrir el archivo para guardar la reservacion.\n";
         return;
     }
 
@@ -259,7 +261,7 @@ void GestionArchivos::guardarReservacion(const Reservacion& reservacion) {
             << reservacion.getAnotacion() << "\n";
 
     archivo.close();
-    cout << "Reservación guardada exitosamente en el archivo.\n";
+    cout << "Reservacion guardada exitosamente en el archivo.\n";
 }
 
 void GestionArchivos::actualizarArchivoReservaciones(Reservacion* reservaciones, int cantidad) {
@@ -288,10 +290,83 @@ void GestionArchivos::actualizarArchivoReservaciones(Reservacion* reservaciones,
     archivo.close();
 }
 
+bool GestionArchivos::guardarReservacionesHistorico(Reservacion* reservaciones, int cantidad, const string& fechaCorte) {
+    // Abrir archivo historico en modo append
+    ofstream archivo("HistoricoReservaciones.txt", ios::app);
+    if (!archivo.is_open()) {
+        cout << "Error: No se pudo abrir el archivo historico.\n";
+        return false;
+    }
+
+    // Agregar marca de tiempo y fecha de corte de la actualizacion
+    archivo << "# === ACTUALIZACION HISTORICO ===\n";
+    archivo << "# Fecha de procesamiento: " << Fecha::obtenerFechaActual() << "\n";
+    archivo << "# Fecha de corte: " << fechaCorte << "\n";  // Usar string directamente
+    archivo << "# Reservaciones finalizadas: " << cantidad << "\n";
+    archivo << "# ================================\n";
+
+    // Guardar reservaciones finalizadas
+    for (int i = 0; i < cantidad; i++) {
+        string metodoPagoStr = formatearMetodoPago(reservaciones[i].getMetodoPago());
+        archivo << reservaciones[i].getCodigo() << "|"
+                << reservaciones[i].getFechaEntrada() << "|"
+                << reservaciones[i].getDuracion() << "|"
+                << reservaciones[i].getCodigoAlojamiento() << "|"
+                << reservaciones[i].getDocumento() << "|"
+                << metodoPagoStr << "|"
+                << reservaciones[i].getFechaPago() << "|"
+                << fixed << setprecision(0) << reservaciones[i].getMonto() << "|"
+                << reservaciones[i].getAnotacion() << "\n";
+    }
+
+    archivo << "# === FIN ACTUALIZACION ===\n\n";
+    archivo.close();
+    return true;
+}
+
 string GestionArchivos::formatearMetodoPago(char metodo) {
     switch (metodo) {
-    case 'T': return "TC";  // Tarjeta de Crédito
+    case 'T': return "TC";  // Tarjeta de Credito
     case 'P': return "PSE"; // PSE
     default: return "TC";   // Por defecto
+    }
+}
+
+int GestionArchivos::cargarUltimoIdReservacion() {
+    ifstream archivo("ultimo_id.txt");
+    int id = 0;
+    if (archivo) {
+        archivo >> id;
+    }  // Si no existe, retorna 0
+    return id;
+}
+
+void GestionArchivos::guardarUltimoIdReservacion(int id) {
+    ofstream archivo("ultimo_id.txt");
+    if (archivo) {
+        archivo << id;
+    } else {
+        cerr << "Error al guardar el ultimo ID de reservacion.\n";
+    }
+}
+
+string GestionArchivos::cargarUltimaFechaCorteHistorico() {
+    ifstream archivo("fecha_corte_historico.txt");
+    string fecha = "";
+    if (archivo) {
+        archivo >> fecha;
+    }
+    // Si no existe archivo o esta vacio, retorna cadena vacia
+    archivo.close();
+    return fecha;
+}
+
+void GestionArchivos::guardarUltimaFechaCorteHistorico(const string& fecha) {
+    ofstream archivo("fecha_corte_historico.txt");
+    if (archivo) {
+        archivo << fecha;
+        archivo.close();
+    } else {
+        cerr << "Error al guardar la fecha de corte del historico.\n";
     }
 }

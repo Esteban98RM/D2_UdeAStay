@@ -10,12 +10,12 @@
 #include <cstdlib>
 
 // Constructor por defecto
-Huesped::Huesped() : documento(""), clave(""), antiguedad(0), puntuacion(0.0f),
+Huesped::Huesped() : nombre(""), documento(""), clave(""), antiguedad(0), puntuacion(0.0f),
 reservaciones(nullptr), numReservaciones(0), capacidadReservaciones(0){}
 
 // Constructor con parametros
-Huesped::Huesped(const string& doc, const string& clv, int ant, float punt) :
-    documento(doc), clave(clv), antiguedad(ant), puntuacion(punt),
+Huesped::Huesped(const string& nom, const string& doc, const string& clv, int ant, float punt) :
+    nombre(nom), documento(doc), clave(clv), antiguedad(ant), puntuacion(punt),
     reservaciones(nullptr), numReservaciones(0), capacidadReservaciones(0)
 {
 
@@ -32,6 +32,7 @@ Huesped::Huesped(const string& doc, const string& clv, int ant, float punt) :
 }
 
 Huesped::Huesped(const Huesped& otro) {
+    nombre = otro.nombre;
     documento = otro.documento;
     clave = otro.clave;
     antiguedad = otro.antiguedad;
@@ -47,12 +48,14 @@ Huesped::Huesped(const Huesped& otro) {
 
 Huesped::~Huesped() {
     delete[] reservaciones;
+    reservaciones = nullptr;
 }
 
 Huesped& Huesped::operator=(const Huesped& otro) {
     if (this != &otro) {
         delete[] reservaciones;
 
+        nombre = otro.nombre;
         documento = otro.documento;
         clave = otro.clave;
         antiguedad = otro.antiguedad;
@@ -135,7 +138,7 @@ int Huesped::solicitarCantidadNoches() {
 
 float Huesped::solicitarPrecioMaximo() {
     char opc;
-    cout << "¿Desea ingresar un precio maximo? (s/n): ";
+    cout << "Desea ingresar un precio maximo? (s/n): ";
     cin >> opc;
 
     if (opc != 's' && opc != 'S') return -1; // Sin limite
@@ -158,7 +161,7 @@ float Huesped::solicitarPrecioMaximo() {
 
 float Huesped::solicitarPuntuacionMinima() {
     char opc;
-    cout << "¿Desea ingresar una puntuacion minima? (s/n): ";
+    cout << "Desea ingresar una puntuacion minima? (s/n): ";
     cin >> opc;
 
     if (opc != 's' && opc != 'S') return -1; // Sin limite
@@ -184,8 +187,8 @@ char Huesped::solicitarMetodoPago() {
     char metodo;
     while (true) {
         cout << "\nMetodos de pago disponibles:\n";
-        cout << "[T] Tarjeta\n";
-        cout << "[P] PayPal\n";
+        cout << "[T] Tarjeta de credito\n";
+        cout << "[P] PSE\n";
         cout << "Seleccione metodo de pago: ";
         cin >> metodo;
 
@@ -237,41 +240,54 @@ int Huesped::seleccionarAlojamiento(Alojamiento* disponibles, int cantidad) {
 
 // Implementacion del metodo principal
 void Huesped::ReservarAlojamiento(Sistema* sistema) {
-    // 1. Recopilar datos del usuario
-    Fecha fechaEntrada = solicitarFechaEntrada();
-    string municipio = solicitarMunicipio();
-    int noches = solicitarCantidadNoches();
-    float precioMax = solicitarPrecioMaximo();
-    float puntuacionMin = solicitarPuntuacionMinima();
+    while (true) {
+        // 1. Recopilar datos del usuario
+        Fecha fechaEntrada = solicitarFechaEntrada();
+        string municipio = solicitarMunicipio();
+        int noches = solicitarCantidadNoches();
+        float precioMax = solicitarPrecioMaximo();
+        float puntuacionMin = solicitarPuntuacionMinima();
 
-    // 2. Buscar alojamientos disponibles
-    int nDisponibles = 0;
-    Alojamiento* disponibles = sistema->buscarAlojamientosDisponibles(
-        municipio, fechaEntrada, noches, precioMax, puntuacionMin, nDisponibles
-        );
+        // 2. Buscar alojamientos disponibles
+        int nDisponibles = 0;
+        Alojamiento* disponibles = sistema->buscarAlojamientosDisponibles(
+            municipio, fechaEntrada, noches, precioMax, puntuacionMin, nDisponibles
+            );
 
-    if (nDisponibles == 0) {
-        cout << "No hay alojamientos disponibles con esos criterios.\n";
-        return;
-    }
+        if (nDisponibles == 0) {
+            char opcion;
+            cout << "\nNo hay alojamientos disponibles con esos criterios.\n";
+            cout << "Desea intentar con otros criterios? (s/n): ";
+            cin >> opcion;
 
-    // 3. Permitir seleccion
-    int seleccion = seleccionarAlojamiento(disponibles, nDisponibles);
-    if (seleccion == -1) {
+            if (tolower(opcion) == 'n') {
+                return; // Salir al menu principal
+            } else {
+                continue; // Repetir el proceso
+            }
+        }
+
+        // 3. Permitir seleccion
+        int seleccion = seleccionarAlojamiento(disponibles, nDisponibles);
+        if (seleccion == -1) {
+            delete[] disponibles;
+            return; // Usuario cancelo
+        }
+
+        // 4. Crear reservacion
+        Reservacion* nuevaReservacion = sistema->crearReservacion(
+            disponibles[seleccion], fechaEntrada, noches, this
+            );
+
+        // 5. Mostrar confirmacion
+        mostrarConfirmacionReservacion(*nuevaReservacion, disponibles[seleccion]);
+
         delete[] disponibles;
-        return; // Usuario cancelo
+        break; // exito -> salir del ciclo
     }
-
-    // 4. Crear reservacion
-    Reservacion* nuevaReservacion = sistema->crearReservacion(
-        disponibles[seleccion], fechaEntrada, noches, this
-        );
-
-    // 5. Mostrar confirmacion
-    mostrarConfirmacionReservacion(*nuevaReservacion, disponibles[seleccion]);
-
-    delete[] disponibles;
 }
+
+//this->getDocumento()
 
 void Huesped::mostrarConfirmacionReservacion(const Reservacion& reservacion,
                                              const Alojamiento& alojamiento) {
@@ -280,14 +296,15 @@ void Huesped::mostrarConfirmacionReservacion(const Reservacion& reservacion,
     Fecha fechaSalida = fechaEntrada.calcularFechaFinal(reservacion.getDuracion());
 
     cout << "\n" << string(60, '=') << "\n";
-    cout << "            COMPROBANTE DE CONFIRMACIoN\n";
+    cout << "            COMPROBANTE DE CONFIRMACION\n";
     cout << string(60, '=') << "\n";
     cout << "Codigo de reserva: " << reservacion.getCodigo() << "\n";
-    cout << "Nombre del usuario: " << this->getDocumento() << "\n"; // Asumiendo que tienes metodo getNombre()
+    cout << "Nombre del usuario: " << this->getNombre() << "\n";
+    cout << "Documento del usuario: " << this->getDocumento() << "\n";
     cout << "Codigo del alojamiento: " << alojamiento.getCodigo() << "\n";
     cout << "Alojamiento: " << alojamiento.getNombre() << "\n";
     cout << "Municipio: " << alojamiento.getMunicipio() << "\n";
-    cout << "\nFECHAS DE ESTADiA:\n";
+    cout << "\nFECHAS DE ESTADIA:\n";
     cout << "Fecha de inicio: " << fechaEntrada.toStringCompleto() << "\n";
     cout << "Fecha de finalizacion: " << fechaSalida.toStringCompleto() << "\n";
     cout << "Duracion: " << reservacion.getDuracion() << " noche(s)\n";
@@ -306,59 +323,115 @@ void Huesped::mostrarConfirmacionReservacion(const Reservacion& reservacion,
     cout << "Que disfrute su estadia!\n";
 }
 
-// Metodo para reservar por codigo especifico
-void Huesped::ReservarAlojamientoPorCodigo(Sistema* sistema) {
-    string codigoAlojamiento;
-    cout << "Ingrese el codigo del alojamiento: ";
-    cin >> codigoAlojamiento;
+void Huesped::mostrarReservaciones(Sistema* sistema) {
+    cout << "\n=== LAS RESERVACIONES DEL HUESPED ===\n";
+    cout << "Nombre: " << this->getNombre() << "\n";
+    cout << "Documento: " << this->getDocumento() << "\n\n";
 
-    // Buscar alojamiento
-    Alojamiento* alojamiento = sistema->buscarAlojamientoPorCodigo(codigoAlojamiento);
-    if (!alojamiento) {
-        cout << "No se encontro un alojamiento con ese codigo.\n";
+    int totalFuturas, totalPasadas;
+    Reservacion* reservaciones = sistema->obtenerReservaciones(
+        this->getDocumento(), totalFuturas, totalPasadas);
+
+    if (reservaciones == nullptr) {
+        cout << "No tiene reservaciones registradas.\n\n";
+        cout << "Presione Enter para continuar...";
+        cin.ignore();
+        cin.get();
         return;
     }
 
-    // Mostrar informacion del alojamiento
-    cout << "\n=== ALOJAMIENTO ENCONTRADO ===\n";
-    alojamiento->mostrar();
-
-    char confirmar;
-    cout << "\n¿Desea continuar con este alojamiento? (s/n): ";
-    cin >> confirmar;
-    if (confirmar != 's' && confirmar != 'S') {
-        cout << "Reservacion cancelada.\n";
-        return;
+    // Mostrar reservaciones futuras
+    if (totalFuturas > 0) {
+        cout << "=== RESERVACIONES FUTURAS (" << totalFuturas << ") ===\n";
+        for (int i = 0; i < totalFuturas; i++) {
+            reservaciones[i].mostrarDetalle(i + 1, false, sistema);
+        }
+    } else {
+        cout << "No tiene reservaciones futuras.\n";
     }
 
-    // Solicitar datos de reserva
-    Fecha fechaEntrada = solicitarFechaEntrada();
-    int noches = solicitarCantidadNoches();
+    cout << "\n";
 
-    // Verificar disponibilidad especifica
-    int nDisponibles = 0;
-    Alojamiento disponibles[1] = {*alojamiento};
-    Alojamiento* resultado = Reservacion::filtrarDisponiblesPorFecha(
-        disponibles,
-        1,
-        fechaEntrada,
-        noches,
-        sistema->getReservaciones(),  // Ahora compatible con const
-        sistema->getNumReservaciones(),
-        nDisponibles
-        );
+    // Mostrar reservaciones pasadas
+    if (totalPasadas > 0) {
+        cout << "=== RESERVACIONES PASADAS (" << totalPasadas << ") ===\n";
+        for (int i = totalFuturas; i < totalFuturas + totalPasadas; i++) {
+            reservaciones[i].mostrarDetalle(i - totalFuturas + 1, false, sistema);
+        }
+    } else {
+        cout << "No tiene reservaciones pasadas.\n";
+    }
+    delete[] reservaciones;
 
-    if (nDisponibles == 0) {
-        cout << "El alojamiento no esta disponible en esas fechas.\n";
-        return;
+    cout << "\nTotal de reservaciones: " << (totalFuturas + totalPasadas) << "\n\n";
+    cout << "Presione Enter para continuar...";
+    cin.ignore();
+    cin.get();
+
+}
+
+void Huesped::anularReservacion(Sistema* sistema) {
+    string numeroReserva;
+    string codigoFinal;
+    string codigoCompleto;
+    bool formatoValido = false;
+
+    while (!formatoValido) {
+        try {
+            cout << "Ingrese el numero de la reservacion: ";
+            cin >> numeroReserva;
+
+            // Validar que sea numerico
+            if (numeroReserva.empty() || !all_of(numeroReserva.begin(), numeroReserva.end(), ::isdigit)) {
+                throw invalid_argument("El numero de la reservacion debe contener solo digitos.");
+            }
+
+            cout << "Ingrese el codigo final : ";
+            cin >> codigoFinal;
+
+            // Validar longitud
+            if (codigoFinal.length() != 5) {
+                throw invalid_argument("El codigo final debe tener exactamente 4 digitos seguidos de una letra.");
+            }
+
+            string parteNumerica = codigoFinal.substr(0, 4);
+            char letra = codigoFinal[4];
+
+            // Validar numeros y letra
+            if (!all_of(parteNumerica.begin(), parteNumerica.end(), ::isdigit)) {
+                throw invalid_argument("Los primeros 4 caracteres del codigo final deben ser digitos.");
+            }
+            if (!isalpha(letra)) {
+                throw invalid_argument("El ultimo caracter del codigo final debe ser una letra.");
+            }
+
+            // Convertir letra a mayuscula si esta en minuscula
+            letra = toupper(letra);
+            codigoFinal = parteNumerica + letra;
+
+            // Construir el codigo completo
+            codigoCompleto = "RES-" + numeroReserva + "-" + codigoFinal;
+
+            formatoValido = true; // Validacion exitosa
+        }
+        catch (const invalid_argument& e) {
+            cout << "Error: " << e.what() << endl;
+            cout << "Desea intentarlo de nuevo? (S/N): ";
+            char opcion;
+            cin >> opcion;
+            if (tolower(opcion) != 's') {
+                cout << "Cancelando anulacion de reservacion.\n";
+                return;
+            }
+        }
     }
 
-    // Crear reservacion
-    Reservacion* nuevaReservacion = sistema->crearReservacion(
-        *alojamiento, fechaEntrada, noches, this
-        );
+    // Proceder con la anulacion
+    bool exito = sistema->eliminarReservacionPorCodigo(codigoCompleto, this->getDocumento());
 
-    if (nuevaReservacion) {
-        mostrarConfirmacionReservacion(*nuevaReservacion, *alojamiento);
+    if (exito) {
+        cout << "Reservacion '" << codigoCompleto << "' anulada exitosamente.\n";
+    } else {
+        cout << "No se encontro una reservacion con el codigo '" << codigoCompleto << "' asociada a su documento.\n";
     }
 }
