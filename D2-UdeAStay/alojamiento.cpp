@@ -1,6 +1,7 @@
 #include "alojamiento.h"
 #include "reservacion.h"
 #include "anfitrion.h"
+#include "medicionrecursos.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -28,6 +29,8 @@ Alojamiento::Alojamiento(const string& cod, const string& nom, const string& doc
     }
 
     amenidades = new string[capacidad];
+    agregarMemoria(sizeof(string) * capacidad);
+
     procesarAmenidades(ameStr);
 }
 
@@ -39,14 +42,21 @@ Alojamiento::Alojamiento(const Alojamiento& otro) :
     capacidad(otro.capacidad), numAmenidades(otro.numAmenidades) {
 
     amenidades = new string[capacidad];
+    agregarMemoria(sizeof(string) * capacidad);
+
     for (int i = 0; i < numAmenidades; i++) {
         amenidades[i] = otro.amenidades[i];
+        incrementarIteracion();
     }
+
+    //mostrarEstadisticasRecursos();
 }
 
 // Operador de asignacion
 Alojamiento& Alojamiento::operator=(const Alojamiento& otro) {
     if (this != &otro) {
+
+        agregarMemoria(-sizeof(string) * capacidad);
         delete[] amenidades;
 
         codigo = otro.codigo;
@@ -61,29 +71,39 @@ Alojamiento& Alojamiento::operator=(const Alojamiento& otro) {
         numAmenidades = otro.numAmenidades;
 
         amenidades = new string[capacidad];
+        agregarMemoria(sizeof(string) * capacidad);
+
         for (int i = 0; i < numAmenidades; i++) {
             amenidades[i] = otro.amenidades[i];
+            incrementarIteracion();
         }
+
     }
     return *this;
 }
 
 // Destructor
 Alojamiento::~Alojamiento() {
+    //inicializarContador();
+    agregarMemoria(-sizeof(string) * capacidad);
     delete[] amenidades;
 }
 
-// Resto de implementaciones permanecen igual...
-
 void Alojamiento::agregarAmenidad(const string& amenidad) {
+    incrementarIteracion();
     if (numAmenidades >= capacidad) {
+        // Medimos memoria antes y después de redimensionar
+        agregarMemoria(-sizeof(string) * capacidad);
+
         // Redimensionar
         capacidad *= 2;
         string* nuevo = new string[capacidad];
+        agregarMemoria(sizeof(string) * capacidad);
 
         // Copiar existentes
         for (int i = 0; i < numAmenidades; i++) {
             nuevo[i] = amenidades[i];
+            incrementarIteracion();
         }
 
         delete[] amenidades;
@@ -98,6 +118,7 @@ const string& Alojamiento::obtenerAmenidad(int index) const {
     if (index < 0 || index >= numAmenidades) {
         throw out_of_range("Indice de amenidad invalido");
     }
+    incrementarIteracion();
     return amenidades[index];
 }
 
@@ -106,6 +127,7 @@ void Alojamiento::procesarAmenidades(const string& amenidadesStr) {
     string amenidad;
 
     while (getline(ss, amenidad, ',')) {
+        incrementarIteracion();
         // Eliminar espacios al inicio y final
         amenidad.erase(0, amenidad.find_first_not_of(' '));
         amenidad.erase(amenidad.find_last_not_of(' ') + 1);
@@ -126,6 +148,7 @@ bool Alojamiento::estaDisponible(const Alojamiento& a, const Fecha& entrada,
     salida.sumarDias(noches);
 
     for (int i = 0; i < numReservas; ++i) {
+        incrementarIteracion();
         if (reservas[i].getCodigoAlojamiento() != a.getCodigo())
             continue;
 
@@ -145,17 +168,12 @@ void Alojamiento::mostrar() const {
     cout << "Municipio: " << municipio << endl;
     cout << "Precio por noche: $" << precio << endl;
 
-    // if (anfitrion) {
-    //     cout << "Puntuacion del anfitrion: " << anfitrion->getPuntuacion() << "/5.0" << endl;
-    // } else {
-    //     cout << "Puntuacion del anfitrion: No disponible" << endl;
-    // }
-
     cout << "Amenidades: ";
     if (numAmenidades == 0) {
         cout << "Ninguna";
     } else {
         for (int i = 0; i < numAmenidades; ++i) {
+            incrementarIteracion();
             cout << amenidades[i];
             if (i < numAmenidades - 1) cout << ", ";
         }

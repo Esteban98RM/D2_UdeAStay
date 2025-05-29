@@ -1,4 +1,5 @@
 #include "sistema.h"
+#include "medicionrecursos.h"
 
 #include <iostream>
 
@@ -7,6 +8,8 @@ using namespace std;
 int main() {
     Sistema sistema;
     sistema.cargarDatos();
+
+    inicializarContador();
 
     bool salirPrograma = false;
 
@@ -25,6 +28,8 @@ int main() {
             cout << "Clave: ";
             cin >> clave;
 
+            incrementarIteracion();
+
             sesionIniciada = sistema.iniciarSesion(documento, clave);
 
             if (!sesionIniciada) {
@@ -32,6 +37,5 @@ int main() {
             }
         }
     }
-
     return 0;
 }

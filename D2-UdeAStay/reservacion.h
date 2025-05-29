@@ -70,21 +70,12 @@ public:
     void reservarEspacio(size_t nueva_capacidad);
     void copiarAnotacion(const char* nueva_anotacion);
 
-/*    // Método estático para filtrar disponibilidad
-    static Alojamiento* filtrarDisponiblesPorFecha(Alojamiento* candidatos,
-                                                   int nCandidatos,
-                                                   const Fecha& fechaEntrada,
-                                                   int noches,
-                                                   Reservacion* reservaciones,
-                                                   int nReservaciones,
-                                                   int& nDisponibles)*/;
-
     static Alojamiento* filtrarDisponiblesPorFecha(
         Alojamiento* candidatos,
         int nCandidatos,
         const Fecha& fechaEntrada,
         int noches,
-        const Reservacion* reservaciones,  // Cambiado a const
+        const Reservacion* reservaciones,
         int nReservaciones,
         int& nDisponibles
         );

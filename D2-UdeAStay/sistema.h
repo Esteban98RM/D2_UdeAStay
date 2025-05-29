@@ -43,7 +43,6 @@ public:
     //Constructor
     Sistema();
     Sistema(const string& doc);
-    //Sistema(const string& doc, Anfitrion* anf, Huesped* hue);
 
     //Destructor
     ~Sistema();
@@ -113,7 +112,7 @@ public:
     // Metodos para el corte historico
     string obtenerUltimaFechaCorteHistorico();
     void procesarActualizacionHistorico(const Fecha& fechaCorte);
-    void mostrarEstadisticasHistorico(const Fecha& fechaCorte, int finalizadas, int activas);
+    void mostrarEstadisticasHistorico(const Fecha& fechaCorte, int finalizadas, int activas, int enCurso);
 };
 
 #endif // SISTEMA_H

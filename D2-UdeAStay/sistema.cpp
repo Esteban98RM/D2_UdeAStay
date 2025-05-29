@@ -2,6 +2,7 @@
 #include "anfitrion.h"
 #include "huesped.h"
 #include "gestionarchivos.h"
+#include "medicionrecursos.h"
 
 #include <iostream>
 #include <fstream>
@@ -13,33 +14,56 @@ using namespace std;
 Sistema::Sistema() : documento(""), anfitriones(nullptr), huespedes(nullptr),
     alojamientos(nullptr), reservaciones(nullptr), numAnfitriones(0),
     numHuespedes(0), numAlojamientos(0), numReservaciones(0), gestionArchivos(new GestionArchivos()) {
+
+    incrementarIteracion();
+    agregarMemoria(sizeof(Sistema));
+    agregarMemoria(sizeof(GestionArchivos));
+
     ultimoIdReservacion = gestionArchivos->cargarUltimoIdReservacion();
+    incrementarIteracion();
 }
 
 Sistema::Sistema(const string& doc) : Sistema() {
     documento = doc;
 }
 
-// Sistema::Sistema(const string& doc, Anfitrion* anf, Huesped* hue) : Sistema(doc) {
-//     // Implementacion para manejar los punteros a anfitriones y huespedes
-// }
-
 // Destructor
 Sistema::~Sistema() {
+    incrementarIteracion();
 
     delete gestionArchivos;
+    agregarMemoria(-static_cast<long long>(sizeof(GestionArchivos)));
 
-    if (anfitriones) delete[] anfitriones;
-    if (huespedes) delete[] huespedes;
-    if (alojamientos) delete[] alojamientos;
-    if (reservaciones) delete[] reservaciones;
+    // Liberar arreglos dinámicos
+    if (anfitriones) {
+        agregarMemoria(-static_cast<long long>(sizeof(Anfitrion) * numAnfitriones));
+        delete[] anfitriones;
+    }
+    if (huespedes) {
+        agregarMemoria(-static_cast<long long>(sizeof(Huesped) * numHuespedes));
+        delete[] huespedes;
+    }
+    if (alojamientos) {
+        agregarMemoria(-static_cast<long long>(sizeof(Alojamiento) * numAlojamientos));
+        delete[] alojamientos;
+    }
+    if (reservaciones) {
+        agregarMemoria(-static_cast<long long>(sizeof(Reservacion) * numReservaciones));
+        delete[] reservaciones;
+    }
 
     numAnfitriones = numHuespedes = numAlojamientos = numReservaciones = 0;
 }
 
 // Operador de comparacion
 bool Sistema::operator==(const Sistema& otro) const {
-    return documento == otro.documento;
+    incrementarIteracion(); // Por la comparación
+
+    // Comparación de strings puede ser costosa
+    bool resultado = documento == otro.documento;
+    incrementarIteracion(); // Por la operación de comparación
+
+    return resultado;
 }
 
 // Carga de datos usando GestionArchivos
@@ -63,6 +87,7 @@ void Sistema::cargarDatos() {
 bool Sistema::autenticarUsuario(const string& doc, const string& clave, string& tipoRol) {
     // Buscar en anfitriones
     for (int i = 0; i < numAnfitriones; i++) {
+        incrementarIteracion();
         if (anfitriones[i].getDocumento() == doc && anfitriones[i].getClave() == clave) {
             tipoRol = "Anfitrion";
             return true;
@@ -71,6 +96,7 @@ bool Sistema::autenticarUsuario(const string& doc, const string& clave, string& 
 
     // Buscar en huespedes
     for (int i = 0; i < numHuespedes; i++) {
+        incrementarIteracion();
         if (huespedes[i].getDocumento() == doc && huespedes[i].getClave() == clave) {
             tipoRol = "Huesped";
             return true;
@@ -85,6 +111,7 @@ bool Sistema::autenticarUsuario(const string& doc, const string& clave, string& 
 
 //     // Buscar en anfitriones
 //     for (int i = 0; i < numAnfitriones; i++) {
+//         incrementarIteracion();
 //         cout << "[DEBUG] Comparando con Anfitrion #" << i
 //              << " | doc=" << anfitriones[i].getDocumento()
 //              << ", clave=" << anfitriones[i].getClave() << endl;
@@ -98,6 +125,7 @@ bool Sistema::autenticarUsuario(const string& doc, const string& clave, string& 
 
 //     // Buscar en huespedes
 //     for (int i = 0; i < numHuespedes; i++) {
+//         incrementarIteracion();
 //         cout << "[DEBUG] Comparando con Huesped #" << i
 //              << " | doc=" << huespedes[i].getDocumento()
 //              << ", clave=" << huespedes[i].getClave() << endl;
@@ -123,6 +151,7 @@ bool Sistema::iniciarSesion(const string &documento, const string &clave) {
 
         if (tipoRol == "Anfitrion") {
             for (int i = 0; i < numAnfitriones; i++) {
+                incrementarIteracion();
                 if (anfitriones[i].getDocumento() == documento) {
                     cout << "\nBienvenido Anfitrion: " << anfitriones[i].getCodigo() << endl;
                     mostrarMenuAnfitrion(anfitriones[i]);
@@ -131,6 +160,7 @@ bool Sistema::iniciarSesion(const string &documento, const string &clave) {
             }
         } else if (tipoRol == "Huesped") {
             for (int i = 0; i < numHuespedes; i++) {
+                incrementarIteracion();
                 if (huespedes[i].getDocumento() == documento) {
                     cout << "\nBienvenido Huesped: " << huespedes[i].getNombre() << endl;
                     mostrarMenuHuesped(huespedes[i]);
@@ -161,19 +191,24 @@ void Sistema::mostrarMenuAnfitrion(Anfitrion& anfitrion) {
 
         switch (opcion) {
         case 1:
+            incrementarIteracion(); // Ver reservaciones activas
             anfitrion.mostrarReservacionesActivas(this);
             break;
         case 2:
+            incrementarIteracion(); // Cancelar reservaciones
             anfitrion.cancelarReservacion(this);
             break;
         case 3:
+            incrementarIteracion(); // Actualizar histórico
             anfitrion.actualizarHistorico(this);
             break;
         case 4:
+            mostrarEstadisticasRecursos();
             cout << "Cerrando sesion...\n";
             volverLogin = true;
             break;
         case 5:
+            mostrarEstadisticasRecursos();
             cout << "Saliendo del programa...\n";
             exit(0);
             break;
@@ -200,19 +235,24 @@ void Sistema::mostrarMenuHuesped(Huesped& huesped) {
 
         switch (opcion) {
         case 1:
+            incrementarIteracion(); // Buscar y reservar alojamiento
             huesped.ReservarAlojamiento(this);
             break;
         case 2:
+            incrementarIteracion(); // Ver mis reservaciones
             huesped.mostrarReservaciones(this);
             break;
         case 3:
+            incrementarIteracion(); // Cancelar reservacion
             huesped.anularReservacion(this);
             break;
         case 4:
+            mostrarEstadisticasRecursos();
             cout << "Cerrando sesion...\n";
             volverLogin = true;
             break;
         case 5:
+            mostrarEstadisticasRecursos();
             cout << "Saliendo del programa...\n";
             exit(0);
             break;
@@ -222,88 +262,94 @@ void Sistema::mostrarMenuHuesped(Huesped& huesped) {
     }
 }
 
-// Alojamiento* Sistema::filtrarAlojamientosDisponibles(
-//     const string& municipio, float precioMax, float puntuacionMin, int& cantidadFiltrada
-//     ) {
-//     Alojamiento* resultado = new Alojamiento[numAlojamientos];
-//     cantidadFiltrada = 0;
-
-//     for (int i = 0; i < numAlojamientos; ++i) {
-//         if (alojamientos[i].getMunicipio() != municipio)
-//             continue;
-
-//         if (precioMax >= 0 && alojamientos[i].getPrecio() > precioMax)
-//             continue;
-
-//         string docAnfitrion = alojamientos[i].getDocumentoAnfitrion();
-//         float puntuacion = -1;
-
-//         for (int j = 0; j < numAnfitriones; ++j) {
-//             if (anfitriones[j].getDocumento() == docAnfitrion) {
-//                 puntuacion = anfitriones[j].getPuntuacion();
-//                 break;
-//             }
-//         }
-
-//         if (puntuacionMin >= 0 && puntuacion < puntuacionMin)
-//             continue;
-
-//         resultado[cantidadFiltrada++] = alojamientos[i];
-//     }
-
-//     return resultado;
-// }
-
 Alojamiento* Sistema::filtrarAlojamientosDisponibles(
     const string& municipio, float precioMax, float puntuacionMin, int& cantidadFiltrada
     ) {
     Alojamiento* resultado = new Alojamiento[numAlojamientos];
+    agregarMemoria(sizeof(Alojamiento) * numAlojamientos);
     cantidadFiltrada = 0;
 
-    cout << "\n=== DEBUG FILTRADO ===" << endl;
-    cout << "Municipio buscado: " << municipio << endl;
-    cout << "Precio max: " << precioMax << endl;
-    cout << "Puntuacion min: " << puntuacionMin << endl;
-
     for (int i = 0; i < numAlojamientos; ++i) {
-        cout << "\nEvaluando alojamiento " << i << ":" << endl;
-        cout << "Municipio: " << alojamientos[i].getMunicipio() << endl;
-        cout << "Precio: " << alojamientos[i].getPrecio() << endl;
-
-        if (alojamientos[i].getMunicipio() != municipio) {
-            cout << " - No coincide municipio" << endl;
+        incrementarIteracion();
+        if (alojamientos[i].getMunicipio() != municipio)
             continue;
-        }
 
-        if (precioMax >= 0 && alojamientos[i].getPrecio() > precioMax) {
-            cout << " - Excede precio maximo" << endl;
+        if (precioMax >= 0 && alojamientos[i].getPrecio() > precioMax)
             continue;
-        }
 
         string docAnfitrion = alojamientos[i].getDocumentoAnfitrion();
         float puntuacion = -1;
 
         for (int j = 0; j < numAnfitriones; ++j) {
+            incrementarIteracion();
             if (anfitriones[j].getDocumento() == docAnfitrion) {
                 puntuacion = anfitriones[j].getPuntuacion();
                 break;
             }
         }
 
-        cout << "Puntuacion anfitrion: " << puntuacion << endl;
-
-        if (puntuacionMin >= 0 && puntuacion < puntuacionMin) {
-            cout << " - No cumple puntuacion minima" << endl;
+        if (puntuacionMin >= 0 && puntuacion < puntuacionMin)
             continue;
-        }
 
         resultado[cantidadFiltrada++] = alojamientos[i];
-        cout << " - ACEPTADO" << endl;
     }
 
-    cout << "Total encontrados: " << cantidadFiltrada << endl;
     return resultado;
 }
+
+// Alojamiento* Sistema::filtrarAlojamientosDisponibles(
+//     const string& municipio, float precioMax, float puntuacionMin, int& cantidadFiltrada
+//     ) {
+//     Alojamiento* resultado = new Alojamiento[numAlojamientos];
+//     agregarMemoria(sizeof(Alojamiento) * numAlojamientos);
+//     cantidadFiltrada = 0;
+
+//     cout << "\n=== DEBUG FILTRADO ===" << endl;
+//     cout << "Municipio buscado: " << municipio << endl;
+//     cout << "Precio max: " << precioMax << endl;
+//     cout << "Puntuacion min: " << puntuacionMin << endl;
+
+//     for (int i = 0; i < numAlojamientos; ++i) {
+//         incrementarIteracion();
+//         cout << "\nEvaluando alojamiento " << i << ":" << endl;
+//         cout << "Municipio: " << alojamientos[i].getMunicipio() << endl;
+//         cout << "Precio: " << alojamientos[i].getPrecio() << endl;
+
+//         if (alojamientos[i].getMunicipio() != municipio) {
+//             cout << " - No coincide municipio" << endl;
+//             continue;
+//         }
+
+//         if (precioMax >= 0 && alojamientos[i].getPrecio() > precioMax) {
+//             cout << " - Excede precio maximo" << endl;
+//             continue;
+//         }
+
+//         string docAnfitrion = alojamientos[i].getDocumentoAnfitrion();
+//         float puntuacion = -1;
+
+//         for (int j = 0; j < numAnfitriones; ++j) {
+//             incrementarIteracion();
+//             if (anfitriones[j].getDocumento() == docAnfitrion) {
+//                 puntuacion = anfitriones[j].getPuntuacion();
+//                 break;
+//             }
+//         }
+
+//         cout << "Puntuacion anfitrion: " << puntuacion << endl;
+
+//         if (puntuacionMin >= 0 && puntuacion < puntuacionMin) {
+//             cout << " - No cumple puntuacion minima" << endl;
+//             continue;
+//         }
+
+//         resultado[cantidadFiltrada++] = alojamientos[i];
+//         cout << " - ACEPTADO" << endl;
+//     }
+
+//     cout << "Total encontrados: " << cantidadFiltrada << endl;
+//     return resultado;
+// }
 
 // Implementacion de Sistema
 Alojamiento* Sistema::buscarAlojamientosDisponibles(const string& municipio,
@@ -332,6 +378,8 @@ Alojamiento* Sistema::buscarAlojamientosDisponibles(const string& municipio,
         );
 
     delete[] candidatos;
+    agregarMemoria(-sizeof(Alojamiento) * nFiltrados); // Memoria liberada
+
     return disponibles;
 }
 
@@ -369,6 +417,8 @@ Reservacion* Sistema::crearReservacion(const Alojamiento& alojamiento,
         anotaciones
         );
 
+    agregarMemoria(sizeof(Reservacion)); // Medición de memoria
+
     // Agregar al sistema
     agregarReservacion(*nuevaReservacion);
 
@@ -398,10 +448,11 @@ bool Sistema::validarDisponibilidadHuesped(const string& documentoHuesped,
     int numReservaciones = getNumReservaciones();
 
     for (int i = 0; i < numReservaciones; i++) {
+        incrementarIteracion();
         if (reservaciones[i].getDocumento() == documentoHuesped) {
             Fecha fechaReservada(reservaciones[i].getFechaEntrada());
             if (Reservacion::hayConflictoFechas(fechaEntrada, noches,
-                                                fechaReservada, reservaciones[i].getDuracion())) {
+                fechaReservada, reservaciones[i].getDuracion())) {
                 return false; // Hay conflicto
             }
         }
@@ -415,15 +466,20 @@ void Sistema::agregarReservacion(const Reservacion& reservacion) {
         // 1. Crear nuevo array mas grande
         Reservacion* nuevasReservaciones = new Reservacion[numReservaciones + 1];
 
+        // Registrar memoria utilizada
+        agregarMemoria(sizeof(Reservacion) * (numReservaciones + 1));
+
         // 2. Copiar reservaciones existentes
         for (int i = 0; i < numReservaciones; i++) {
             nuevasReservaciones[i] = reservaciones[i];
+            incrementarIteracion();
         }
 
         // 3. Agregar la nueva reservacion
         nuevasReservaciones[numReservaciones] = reservacion;
 
         // 4. Reemplazar el array antiguo
+        agregarMemoria(-sizeof(Reservacion) * numReservaciones);
         delete[] reservaciones;
         reservaciones = nuevasReservaciones;
         numReservaciones++;
@@ -443,12 +499,14 @@ void Sistema::agregarReservacion(const Reservacion& reservacion) {
 
 bool Sistema::eliminarReservacionPorCodigo(const string& codigo, const string& documento) {
     for (int i = 0; i < numReservaciones; ++i) {
+        incrementarIteracion();
         if (reservaciones[i].getCodigo() == codigo &&
             reservaciones[i].getDocumento() == documento) {
 
             // Reorganizar el arreglo (no se usa delete porque son objetos, no punteros)
             for (int j = i; j < numReservaciones - 1; ++j) {
                 reservaciones[j] = reservaciones[j + 1];
+                incrementarIteracion();
             }
 
             numReservaciones--;
@@ -472,6 +530,7 @@ Reservacion* Sistema::obtenerReservaciones(const string& documentoHuesped,
     // Primera pasada: contar reservaciones del huésped
     int contadorTotal = 0;
     for (int i = 0; i < totalReservaciones; i++) {
+        incrementarIteracion();
         if (todasReservaciones[i].getDocumento() == documentoHuesped) {
             contadorTotal++;
         }
@@ -488,9 +547,11 @@ Reservacion* Sistema::obtenerReservaciones(const string& documentoHuesped,
     totalPasadas = 0;
 
     bool* esPasada = new bool[contadorTotal];
+    agregarMemoria(sizeof(bool) * contadorTotal);
     int index = 0;
 
     for (int i = 0; i < totalReservaciones; i++) {
+        incrementarIteracion();
         if (todasReservaciones[i].getDocumento() == documentoHuesped) {
             Fecha fechaEntrada(todasReservaciones[i].getFechaEntrada());
             Fecha fechaFinal = fechaEntrada.sumarDias(todasReservaciones[i].getDuracion());
@@ -507,11 +568,13 @@ Reservacion* Sistema::obtenerReservaciones(const string& documentoHuesped,
 
     // Crear arreglo resultado (futuras primero, luego pasadas)
     Reservacion* resultado = new Reservacion[contadorTotal];
+    agregarMemoria(sizeof(Reservacion) * contadorTotal);
     int idxFuturas = 0;
     int idxPasadas = totalFuturas;
     index = 0;
 
     for (int i = 0; i < totalReservaciones; i++) {
+        incrementarIteracion();
         if (todasReservaciones[i].getDocumento() == documentoHuesped) {
             if (!esPasada[index]) {
                 resultado[idxFuturas++] = todasReservaciones[i];
@@ -523,6 +586,8 @@ Reservacion* Sistema::obtenerReservaciones(const string& documentoHuesped,
     }
 
     delete[] esPasada;
+    agregarMemoria(-sizeof(bool) * contadorTotal);  // Memoria liberada
+
     return resultado;
 }
 
@@ -551,6 +616,8 @@ Reservacion* Sistema::obtenerReservaciones(const string& documentoAnfitrion,
 
     // Segunda pasada: llenar arreglo resultado
     Reservacion* resultado = new Reservacion[totalEncontradas];
+    agregarMemoria(sizeof(Reservacion) * totalEncontradas);
+
     int index = 0;
 
     for (int i = 0; i < totalReservaciones; i++) {
@@ -573,6 +640,7 @@ bool Sistema::esReservacionDelAnfitrionEnRango(const Reservacion& reserva,
     // Verificar si la reservacion corresponde a un alojamiento del anfitrion
     bool esDelAnfitrion = false;
     for (int i = 0; i < totalAlojamientos; i++) {
+        incrementarIteracion();
         if (alojamientos[i].getCodigo() == reserva.getCodigoAlojamiento() &&
             alojamientos[i].getDocumentoAnfitrion() == documentoAnfitrion) {
             esDelAnfitrion = true;
@@ -598,127 +666,109 @@ string Sistema::obtenerUltimaFechaCorteHistorico() {
     return gestionArchivos->cargarUltimaFechaCorteHistorico();
 }
 
-void Sistema::mostrarEstadisticasHistorico(const Fecha& fechaCorte, int movidas, int activas) {
-    cout << "\n=== RESUMEN DE ACTUALIZACION ===\n";
-    cout << "Fecha de corte: " << fechaCorte.toString() << endl;
-    cout << "Reservaciones movidas al historico: " << movidas << endl;
-    cout << "Reservaciones activas restantes: " << activas << endl;
+void Sistema::mostrarEstadisticasHistorico(const Fecha& fechaCorte, int finalizadas, int activas, int enCurso) {
+    cout << "\n=== RESUMEN DE ACTUALIZACION DE HISTORICO ===\n";
+    cout << "Fecha de corte establecida: " << fechaCorte.toString() << endl;
+    cout << "Fecha de procesamiento: " << Fecha::obtenerFechaActual() << endl;
+    cout << "\n--- ESTADISTICAS DE RESERVACIONES ---\n";
+    cout << "Reservaciones FINALIZADAS (movidas al historico): " << finalizadas << endl;
+    cout << "Reservaciones EN CURSO (mantienen activas): " << enCurso << endl;
+    cout << "Reservaciones FUTURAS (mantienen activas): " << (activas - enCurso) << endl;
+    cout << "Total de reservaciones activas restantes: " << activas << endl;
 
-    // Calcular fecha límite para nuevas reservaciones (12 meses desde fecha de corte)
-    Fecha fechaLimite = fechaCorte.sumarDias(365); // Aproximadamente 12 meses
-    cout << "Nuevas reservaciones habilitadas hasta: " << fechaLimite.toString() << endl;
-    cout << "================================\n";
+    // Información adicional sobre el sistema
+    cout << "\n--- CONFIGURACION DEL SISTEMA ---\n";
+    Fecha fechaLimite = fechaCorte.sumarDias(365); // 12 meses aproximadamente
+    cout << "Nueva fecha base para reservaciones: " << fechaCorte.toString() << endl;
+    cout << "Limite de reservaciones habilitado hasta: " << fechaLimite.toString() << endl;
+
+    // Resumen final
+    cout << "\n--- ARCHIVOS ACTUALIZADOS ---\n";
+    cout << "HistoricoReservaciones.txt - Nuevas " << finalizadas << " reservaciones agregadas\n";
+    cout << "reservaciones.txt - Actualizado con " << activas << " reservaciones activas\n";
+    cout << "fecha_corte_historico.txt - Nueva fecha base guardada\n";
+
+    cout << "\n==========================================\n";
+    cout << "Actualizacion de historico completada exitosamente.\n";
+    cout << "==========================================\n";
 }
 
 void Sistema::procesarActualizacionHistorico(const Fecha& fechaCorte) {
-    cout << "\n=== PROCESANDO ACTUALIZACION DE HISTORICO ===\n";
-    cout << "LOGICA: Solo reservaciones YA FINALIZADAS van al historico.\n";
-    cout << "La fecha de corte (" << fechaCorte.toString()
-         << ") establece la nueva base para proximas reservaciones.\n\n";
+    cout << "\n=== ACTUALIZACION DE HISTORICO ===\n";
 
     Fecha fechaHoy(Fecha::obtenerFechaActual());
 
-    // Contadores para estadisticas detalladas
-    int reservacionesFinalizadas = 0;    // Ya pasaron completamente
-    int reservacionesActivas = 0;        // Futuras o en curso
-    int reservacionesEnCurso = 0;        // Iniciadas pero no terminadas
+    int reservacionesFinalizadas = 0;
+    int reservacionesActivas = 0;
+    int reservacionesEnCurso = 0;
 
-    // Primera pasada: clasificar reservaciones por estado
     for (int i = 0; i < numReservaciones; i++) {
+        incrementarIteracion();
         Fecha fechaInicio(reservaciones[i].getFechaEntrada());
         Fecha fechaFin = fechaInicio.calcularFechaFinal(reservaciones[i].getDuracion());
 
         if (fechaFin < fechaHoy) {
-            // La estadia ya termino completamente
             reservacionesFinalizadas++;
-        } else if (fechaInicio <= fechaHoy && fechaFin >= fechaHoy) {
-            // Reservacion en curso (huesped actualmente hospedado)
-            reservacionesEnCurso++;
-            reservacionesActivas++;
         } else {
-            // Reservacion futura
             reservacionesActivas++;
+            if (fechaInicio <= fechaHoy && fechaFin >= fechaHoy) {
+                reservacionesEnCurso++;
+            }
         }
     }
 
-    // Mostrar analisis detallado
-    cout << "ANALISIS DE RESERVACIONES:\n";
-    cout << "- Reservaciones FINALIZADAS (van al historico): " << reservacionesFinalizadas << endl;
-    cout << "- Reservaciones EN CURSO (se mantienen activas): " << reservacionesEnCurso << endl;
-    cout << "- Reservaciones FUTURAS (se mantienen activas): " << (reservacionesActivas - reservacionesEnCurso) << endl;
-    cout << "- Total que permanecen activas: " << reservacionesActivas << endl;
+    cout << "- Finalizadas: " << reservacionesFinalizadas << endl;
+    cout << "- En curso: " << reservacionesEnCurso << endl;
+    cout << "- Futuras: " << (reservacionesActivas - reservacionesEnCurso) << endl;
 
     if (reservacionesFinalizadas == 0) {
-        cout << "\nNo hay reservaciones finalizadas para mover al historico.\n";
-        // But still update the base date for new reservations
-        cout << "Se actualiza la fecha base para habilitar reservaciones hasta: "
-             << fechaCorte.sumarDias(365).toString() << endl;
-
-        // Guardar la nueva fecha de corte como referencia
         gestionArchivos->guardarUltimaFechaCorteHistorico(fechaCorte.toString());
-        cout << "Sistema actualizado con nueva fecha base.\n";
+        cout << "Fecha base actualizada: " << fechaCorte.sumarDias(365).toString() << endl;
         return;
     }
 
-    // Confirmar operacion
-    cout << "\nProceder a mover " << reservacionesFinalizadas
-         << " reservaciones finalizadas al historico? (s/n): ";
+    cout << "Mover " << reservacionesFinalizadas << " al historico? (s/n): ";
     char confirmar;
     cin >> confirmar;
+    if (confirmar != 's' && confirmar != 'S') return;
 
-    if (confirmar != 's' && confirmar != 'S') {
-        cout << "Operacion cancelada.\n";
-        return;
-    }
-
-    // Crear arrays para separar reservaciones
     Reservacion* reservacionesParaHistorico = new Reservacion[reservacionesFinalizadas];
+    agregarMemoria(sizeof(Reservacion) * reservacionesFinalizadas);
+
     Reservacion* reservacionesParaMantener = new Reservacion[reservacionesActivas];
+    agregarMemoria(sizeof(Reservacion) * reservacionesActivas);
 
-    int indiceHistorico = 0;
-    int indiceMantener = 0;
-
-    // Separar reservaciones basado en si YA TERMINARON
+    int iH = 0, iM = 0;
     for (int i = 0; i < numReservaciones; i++) {
-        Fecha fechaInicio(reservaciones[i].getFechaEntrada());
-        Fecha fechaFin = fechaInicio.calcularFechaFinal(reservaciones[i].getDuracion());
-
-        if (fechaFin < fechaHoy) {
-            // Ya termino completamente, va al historico
-            reservacionesParaHistorico[indiceHistorico] = reservaciones[i];
-            indiceHistorico++;
+        incrementarIteracion();
+        Fecha inicio(reservaciones[i].getFechaEntrada());
+        Fecha fin = inicio.calcularFechaFinal(reservaciones[i].getDuracion());
+        if (fin < fechaHoy) {
+            reservacionesParaHistorico[iH++] = reservaciones[i];
         } else {
-            // Activa, en curso o futura, se mantiene
-            reservacionesParaMantener[indiceMantener] = reservaciones[i];
-            indiceMantener++;
+            reservacionesParaMantener[iM++] = reservaciones[i];
         }
     }
 
-    // Guardar reservaciones finalizadas en historico
     if (gestionArchivos->guardarReservacionesHistorico(reservacionesParaHistorico, reservacionesFinalizadas, fechaCorte.toString())) {
-        cout << reservacionesFinalizadas << " reservaciones finalizadas movidas al historico.\n";
 
-        // Actualizar estructura de datos actual
+        agregarMemoria(-sizeof(Reservacion) * numReservaciones);
         delete[] reservaciones;
+
         reservaciones = reservacionesParaMantener;
         numReservaciones = reservacionesActivas;
 
-        // Actualizar archivo principal de reservaciones
         gestionArchivos->actualizarArchivoReservaciones(reservaciones, numReservaciones);
-
-        // Guardar la nueva fecha de corte
         gestionArchivos->guardarUltimaFechaCorteHistorico(fechaCorte.toString());
-
-        cout << "Archivo de reservaciones actualizado.\n";
-        cout << "Quedan " << reservacionesActivas << " reservaciones activas.\n";
-        cout << "Nueva fecha de corte guardada: " << fechaCorte.toString() << "\n";
-
-        // Mostrar estadisticas
-        mostrarEstadisticasHistorico(fechaCorte, reservacionesFinalizadas, reservacionesActivas);
-
+        cout << "Actualizacion completada. Activas: " << reservacionesActivas << endl;
+        mostrarEstadisticasHistorico(fechaCorte, reservacionesFinalizadas, reservacionesActivas, reservacionesEnCurso);
     } else {
-        cout << "Error: No se pudo actualizar el historico.\n";
+        cout << "Error al guardar en historico.\n";
+
+        agregarMemoria(-sizeof(Reservacion) * reservacionesActivas);
         delete[] reservacionesParaMantener;
     }
+
+    agregarMemoria(-sizeof(Reservacion) * reservacionesFinalizadas);
     delete[] reservacionesParaHistorico;
 }

@@ -10,6 +10,7 @@ SOURCES += \
         gestionarchivos.cpp \
         huesped.cpp \
         main.cpp \
+        medicionrecursos.cpp \
         reservacion.cpp \
         sistema.cpp
 
@@ -19,5 +20,6 @@ HEADERS += \
     fecha.h \
     gestionarchivos.h \
     huesped.h \
+    medicionrecursos.h \
     reservacion.h \
     sistema.h
