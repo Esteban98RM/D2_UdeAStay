@@ -8,12 +8,31 @@
 
 using namespace std;
 
-// Constructor por defecto
+/**
+ * @brief Constructor por defecto de la clase Alojamiento.
+ *
+ * Inicializa los atributos con valores predeterminados.
+ * Crea un arreglo de amenidades vacío (puntero a nullptr).
+ */
 Alojamiento::Alojamiento() : codigo(""), nombre(""), documento(""), departamento(""),
     municipio(""), tipo('C'), direccion(""), precio(0.0f),
     amenidades(nullptr), capacidad(0), numAmenidades(0){}
 
-// Constructor principal
+/**
+ * @brief Constructor principal de la clase Alojamiento.
+ *
+ * @param cod Código del alojamiento.
+ * @param nom Nombre del alojamiento.
+ * @param docAnf Documento del anfitrión.
+ * @param dep Departamento donde se encuentra el alojamiento.
+ * @param mun Municipio donde se encuentra el alojamiento.
+ * @param tip Tipo de alojamiento ('C' para casa, 'A' para apartamento).
+ * @param dir Dirección del alojamiento.
+ * @param prec Precio por noche.
+ * @param ameStr Cadena de amenidades separadas por comas.
+ *
+ * @throws std::invalid_argument si el tipo es inválido o el precio es negativo.
+ */
 Alojamiento::Alojamiento(const string& cod, const string& nom, const string& docAnf,
                          const string& dep, const string& mun, char tip,
                          const string& dir, float prec, const string& ameStr) :
@@ -34,7 +53,13 @@ Alojamiento::Alojamiento(const string& cod, const string& nom, const string& doc
     procesarAmenidades(ameStr);
 }
 
-// Constructor de copia
+/**
+ * @brief Constructor de copia.
+ *
+ * Crea una copia profunda del objeto Alojamiento recibido.
+ *
+ * @param otro Objeto Alojamiento que se desea copiar.
+ */
 Alojamiento::Alojamiento(const Alojamiento& otro) :
     codigo(otro.codigo), nombre(otro.nombre), documento(otro.documento),
     departamento(otro.departamento), municipio(otro.municipio),
@@ -48,11 +73,16 @@ Alojamiento::Alojamiento(const Alojamiento& otro) :
         amenidades[i] = otro.amenidades[i];
         incrementarIteracion();
     }
-
-    //mostrarEstadisticasRecursos();
 }
 
-// Operador de asignacion
+/**
+ * @brief Operador de asignación.
+ *
+ * Realiza una copia profunda de otro objeto Alojamiento, liberando previamente los recursos actuales.
+ *
+ * @param otro Objeto Alojamiento que se desea asignar.
+ * @return Referencia al objeto actual.
+ */
 Alojamiento& Alojamiento::operator=(const Alojamiento& otro) {
     if (this != &otro) {
 
@@ -82,13 +112,25 @@ Alojamiento& Alojamiento::operator=(const Alojamiento& otro) {
     return *this;
 }
 
-// Destructor
+/**
+ * @brief Destructor de la clase Alojamiento.
+ *
+ * Libera la memoria dinámica asociada al arreglo de amenidades.
+ */
 Alojamiento::~Alojamiento() {
     //inicializarContador();
     agregarMemoria(-sizeof(string) * capacidad);
     delete[] amenidades;
 }
 
+/**
+ * @brief Agrega una nueva amenidad al alojamiento.
+ *
+ * Si se alcanza la capacidad del arreglo, se duplica su tamaño antes de agregar.
+ * También actualiza el conteo de iteraciones y memoria usada.
+ *
+ * @param amenidad Nombre de la amenidad a agregar.
+ */
 void Alojamiento::agregarAmenidad(const string& amenidad) {
     incrementarIteracion();
     if (numAmenidades >= capacidad) {
@@ -114,6 +156,14 @@ void Alojamiento::agregarAmenidad(const string& amenidad) {
     amenidades[numAmenidades++] = amenidad;
 }
 
+/**
+ * @brief Obtiene una amenidad específica del alojamiento.
+ *
+ * @param index Índice de la amenidad a obtener.
+ * @return Referencia constante a la cadena de la amenidad.
+ *
+ * @throws std::out_of_range si el índice es inválido.
+ */
 const string& Alojamiento::obtenerAmenidad(int index) const {
     if (index < 0 || index >= numAmenidades) {
         throw out_of_range("Indice de amenidad invalido");
@@ -122,6 +172,13 @@ const string& Alojamiento::obtenerAmenidad(int index) const {
     return amenidades[index];
 }
 
+/**
+ * @brief Procesa una cadena de texto con amenidades separadas por comas.
+ *
+ * Divide la cadena, limpia espacios, convierte a minúsculas y agrega cada amenidad.
+ *
+ * @param amenidadesStr Cadena de amenidades separadas por comas.
+ */
 void Alojamiento::procesarAmenidades(const string& amenidadesStr) {
     stringstream ss(amenidadesStr);
     string amenidad;
@@ -141,6 +198,20 @@ void Alojamiento::procesarAmenidades(const string& amenidadesStr) {
     }
 }
 
+/**
+ * @brief Verifica si el alojamiento está disponible en un rango de fechas dado.
+ *
+ * Revisa si el alojamiento no tiene reservas que se superpongan con el rango desde `entrada`
+ * hasta `entrada + noches`. Compara las fechas de entrada y salida de todas las reservas.
+ *
+ * @param a Objeto Alojamiento al que se desea verificar la disponibilidad.
+ * @param entrada Fecha de entrada deseada.
+ * @param noches Cantidad de noches de la estancia.
+ * @param reservas Arreglo de reservas existentes.
+ * @param numReservas Número de reservas en el arreglo.
+ *
+ * @return true si el alojamiento está disponible en el rango indicado, false si ya está reservado.
+ */
 bool Alojamiento::estaDisponible(const Alojamiento& a, const Fecha& entrada,
                                  int noches, const Reservacion* reservas,
                                  int numReservas) const {
@@ -163,6 +234,12 @@ bool Alojamiento::estaDisponible(const Alojamiento& a, const Fecha& entrada,
     return true;
 }
 
+/**
+ * @brief Muestra la información del alojamiento en consola.
+ *
+ * Incluye el nombre, municipio, precio por noche, código del alojamiento
+ * y la lista de amenidades. Si no hay amenidades, se indica explícitamente.
+ */
 void Alojamiento::mostrar() const {
     cout << "Nombre: " << nombre << endl;
     cout << "Municipio: " << municipio << endl;

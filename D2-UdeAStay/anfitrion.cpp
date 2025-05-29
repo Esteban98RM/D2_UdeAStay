@@ -9,12 +9,33 @@
 
 using namespace std;
 
-// Constructor por defecto
+/**
+ * @brief Constructor por defecto de la clase Anfitrion.
+ *
+ * Inicializa todos los atributos con valores predeterminados:
+ * cadenas vacías, antigüedad en 0 y puntuación en 0.0.
+ * También registra la memoria usada.
+ */
 Anfitrion::Anfitrion() : codigo(""), documento(""), clave(""), antiguedad(0), puntuacion(0.0f) {
     agregarMemoria(sizeof(string) * 3 + sizeof(int) + sizeof(float));
 }
 
-// Constructor con parametros
+/**
+ * @brief Constructor con parámetros de la clase Anfitrion.
+ *
+ * Inicializa los atributos con los valores dados y realiza validaciones:
+ * - Ningún campo de texto debe estar vacío.
+ * - La antigüedad no puede ser negativa.
+ * - La puntuación debe estar en el rango [0.0, 5.0].
+ *
+ * @param cod Código identificador del anfitrión.
+ * @param doc Documento de identidad del anfitrión.
+ * @param clv Clave o contraseña del anfitrión.
+ * @param ant Antigüedad en años del anfitrión.
+ * @param punt Puntuación promedio del anfitrión.
+ *
+ * @throws std::invalid_argument si se detectan datos inválidos.
+ */
 Anfitrion::Anfitrion(const string& cod, const string& doc, const string& clv, int ant, float punt) :
     codigo(cod), documento(doc), clave(clv), antiguedad(ant), puntuacion(punt) {
 
@@ -33,11 +54,33 @@ Anfitrion::Anfitrion(const string& cod, const string& doc, const string& clv, in
     }
 }
 
-// Destructor
+/**
+ * @brief Destructor de la clase Anfitrion.
+ *
+ * No realiza liberación explícita de memoria porque no se usa asignación dinámica.
+ */
 Anfitrion::~Anfitrion() {
     // No es necesario liberar recursos manualmente porque no hay uso de memoria dinámica propia
 }
 
+/**
+ * @brief Muestra en consola las reservaciones activas de los alojamientos de un anfitrión.
+ *
+ * Solicita al usuario un rango de fechas, consulta el sistema por las reservaciones activas
+ * del anfitrión en ese rango y las muestra en pantalla. También gestiona recursos temporales
+ * y actualiza estadísticas de memoria e iteraciones.
+ *
+ * @param sistema Puntero al objeto Sistema desde el cual se obtienen las reservaciones.
+ *
+ * El proceso incluye:
+ * - Solicitud de fechas de inicio y fin al usuario.
+ * - Validación del rango de fechas.
+ * - Consulta de reservaciones activas pertenecientes al anfitrión.
+ * - Muestra en consola de los detalles de cada reservación encontrada.
+ * - Manejo de memoria dinámica asociada a las reservaciones obtenidas.
+ *
+ * Si no se encuentran reservaciones activas en el rango dado, se notifica al usuario.
+ */
 void Anfitrion::mostrarReservacionesActivas(Sistema* sistema) {
     cout << "\n=== RESERVACIONES ACTIVAS DE MIS ALOJAMIENTOS ===\n";
     cout << "Anfitrion: " << this->getCodigo() << "\n";
@@ -102,6 +145,31 @@ void Anfitrion::mostrarReservacionesActivas(Sistema* sistema) {
     agregarMemoria(-sizeof(Reservacion) * totalEncontradas);
 }
 
+/**
+ * @brief Permite a un anfitrión cancelar una reservación futura asociada a sus alojamientos.
+ *
+ * Esta función muestra una lista de reservaciones futuras (aún no iniciadas) correspondientes
+ * a los alojamientos administrados por el anfitrión. Luego permite seleccionar una reservación
+ * para cancelarla, previa confirmación del usuario. La operación actualiza estadísticas internas
+ * de memoria e iteraciones.
+ *
+ * @param sistema Puntero al sistema central que contiene la información de alojamientos y reservaciones.
+ *
+ * El flujo general es el siguiente:
+ * - Se filtran reservaciones futuras asociadas al anfitrión.
+ * - Se muestran en consola con sus detalles relevantes.
+ * - El anfitrión puede seleccionar una para cancelar o abortar la operación.
+ * - Se solicita confirmación antes de proceder.
+ * - En caso de éxito, se informa la cancelación al usuario.
+ *
+ * Se maneja la memoria dinámica usada para registrar los índices de reservaciones válidas
+ * y se asegura su liberación sin importar el resultado del proceso.
+ *
+ * Validaciones incluidas:
+ * - Que existan reservaciones futuras asociadas al anfitrión.
+ * - Que el rango de selección del usuario sea válido.
+ * - Confirmación final del anfitrión antes de proceder con la cancelación.
+ */
 void Anfitrion::cancelarReservacion(Sistema* sistema) {
     cout << "\n=== CANCELAR RESERVACION ===\n";
 
@@ -248,6 +316,30 @@ void Anfitrion::cancelarReservacion(Sistema* sistema) {
     agregarMemoria(-sizeof(int) * sistema->getNumReservaciones());
 }
 
+/**
+ * @brief Solicita una fecha de corte al anfitrión y actualiza el histórico de reservaciones.
+ *
+ * Esta función permite definir una nueva fecha de corte en el sistema para trasladar al histórico
+ * aquellas reservaciones finalizadas (cuyo periodo ya ha pasado completamente). Se asegura que la
+ * fecha ingresada sea válida y posterior a la última fecha de corte registrada, si existe.
+ *
+ * @param sistema Puntero al sistema central que administra las reservaciones y el histórico.
+ *
+ * El procedimiento incluye:
+ * - Solicitar y validar la fecha de corte ingresada por el anfitrión.
+ * - Verificar que la fecha no sea anterior o igual a la última fecha de corte ya registrada.
+ * - Mostrar información relevante sobre cómo se clasifican las reservaciones para ser trasladadas.
+ * - Confirmar la operación con el anfitrión antes de continuar.
+ * - Llamar a `Sistema::procesarActualizacionHistorico` para ejecutar la actualización.
+ *
+ * Validaciones importantes:
+ * - Formato y validez de la fecha.
+ * - Fecha mayor a la última registrada.
+ * - Confirmación del usuario antes de proceder.
+ *
+ * Se actualiza el contador de iteraciones durante todas las operaciones relevantes
+ * y se informa claramente al usuario de las implicaciones de la operación.
+ */
 void Anfitrion::actualizarHistorico(Sistema* sistema) {
     cout << "\n=== ACTUALIZAR HISTORICO DE RESERVACIONES ===\n";
 

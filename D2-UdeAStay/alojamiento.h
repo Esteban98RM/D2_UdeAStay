@@ -1,10 +1,3 @@
-
-
-    // string* fechasReservadas;
-    // int capacidadFechas;
-    // int numFechasReservadas;
-
-
 #ifndef ALOJAMIENTO_H
 #define ALOJAMIENTO_H
 
