@@ -1,14 +1,23 @@
 #include "fecha.h"
+#include "medicionrecursos.h"
 
 #include <sstream>
 #include <iomanip>
 #include <ctime>
 
-Fecha::Fecha() : dia(0), mes(0), anio(0) {}
+Fecha::Fecha() : dia(0), mes(0), anio(0) {
+    incrementarIteracion();
+    agregarMemoria(sizeof(Fecha));
+}
 
-Fecha::Fecha(int d, int m, int a) : dia(d), mes(m), anio(a) {}
+Fecha::Fecha(int d, int m, int a) : dia(d), mes(m), anio(a) {
+    incrementarIteracion();
+    agregarMemoria(sizeof(Fecha));
+}
 
 Fecha::Fecha(const string& fechaStr) {
+    incrementarIteracion();
+    agregarMemoria(sizeof(Fecha));
     char sep1, sep2;
     stringstream ss(fechaStr);
     if (!(ss >> dia >> sep1 >> mes >> sep2 >> anio) || sep1 != '/' || sep2 != '/' || !esValida()) {
@@ -17,6 +26,7 @@ Fecha::Fecha(const string& fechaStr) {
 }
 
 bool Fecha::esValida() const {
+    incrementarIteracion();
     if (dia <= 0 || mes <= 0 || anio <= 0) return false;
     if (mes > 12 || dia > 31) return false;
 
@@ -28,6 +38,7 @@ bool Fecha::esValida() const {
 }
 
 bool Fecha::yaPaso() const {
+    incrementarIteracion();
     time_t t = time(nullptr);
     tm* now = localtime(&t);
 
@@ -86,6 +97,7 @@ string Fecha::obtenerFechaActual() {
 }
 
 Fecha Fecha::sumarDias(int diasSumar) const {
+    incrementarIteracion();
     int d = dia, m = mes, a = anio;
     int diasMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
@@ -118,6 +130,7 @@ Fecha Fecha::calcularFechaFinal(int noches) const {
 
 // Usaremos algoritmo simple para contar días desde 01/01/1900
 int Fecha::aDiasDesdeFechaBase() const {
+    incrementarIteracion();
     int totalDias = 0;
     int diasMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
@@ -141,15 +154,25 @@ int Fecha::aDiasDesdeFechaBase() const {
 }
 
 bool Fecha::operator==(const Fecha& otra) const {
+    incrementarIteracion();
     return dia == otra.dia && mes == otra.mes && anio == otra.anio;
 }
 
 bool Fecha::operator<(const Fecha& otra) const {
+    incrementarIteracion();
     return this->aDiasDesdeFechaBase() < otra.aDiasDesdeFechaBase();
 }
 
 bool Fecha::operator>(const Fecha& otra) const {
     return otra < *this;
+}
+
+bool Fecha::operator<=(const Fecha& otra) const {
+    return !(*this > otra);
+}
+
+bool Fecha::operator>=(const Fecha& otra) const {
+    return !(*this < otra);
 }
 
 ostream& operator<<(ostream& os, const Fecha& f) {

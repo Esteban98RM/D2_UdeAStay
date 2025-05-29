@@ -14,6 +14,7 @@ private:
 
     Alojamiento aloj;
 
+    string nombre;
     string documento;
     string clave;
     int antiguedad;
@@ -29,7 +30,7 @@ private:
 public:
 
     Huesped();
-    Huesped(const string& doc, const string& clv, int ant, float punt);
+    Huesped(const string& nom, const string& doc, const string& clv, int ant, float punt);
     Huesped(const Alojamiento& alojamiento) : aloj(alojamiento) {}
     Huesped(const Huesped& otro);
 
@@ -40,6 +41,7 @@ public:
     // Getters
 
     const Reservacion* getReservaciones() const { return reservaciones; }
+    const string& getNombre() const { return nombre; }
     const string& getDocumento() const { return documento; }
     const string& getClave() const { return clave; }
     int getAntiguedad() const { return antiguedad; }
@@ -48,6 +50,8 @@ public:
 
     //Metodos para reservas
     void ReservarAlojamiento(Sistema* sistema);
+    void mostrarReservaciones(Sistema* sistema);
+    void anularReservacion(Sistema* sistema);
 
     // Métodos de entrada de datos
     Fecha solicitarFechaEntrada();
@@ -62,12 +66,8 @@ public:
     int seleccionarAlojamiento(Alojamiento* disponibles, int cantidad);
 
     // Métodos de confirmación
-    void mostrarConfirmacionReservacion(const Reservacion& reservacion,
-                                        const Alojamiento& alojamiento);
-
-    // Método alternativo para reservar por código específico
-    void ReservarAlojamientoPorCodigo(Sistema* sistema);
-
+    void mostrarConfirmacionReservacion(const Reservacion& reservacion, const Alojamiento& alojamiento);
+    void mostrarDetalleReservacion(const Reservacion& reserva, int numero);
 };
 
 #endif // HUESPED_H

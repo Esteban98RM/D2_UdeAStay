@@ -29,6 +29,7 @@ private:
 
     void redimensionarAnotaciones(size_t nueva_capacidad);
     void copiarAnotaciones(const char* nuevas_anotaciones, size_t longitud);
+    string obtenerNombreHuesped(Sistema* sistema) const;
 
     float precioMax;
     float puntuacionMin;
@@ -69,21 +70,12 @@ public:
     void reservarEspacio(size_t nueva_capacidad);
     void copiarAnotacion(const char* nueva_anotacion);
 
-/*    // Método estático para filtrar disponibilidad
-    static Alojamiento* filtrarDisponiblesPorFecha(Alojamiento* candidatos,
-                                                   int nCandidatos,
-                                                   const Fecha& fechaEntrada,
-                                                   int noches,
-                                                   Reservacion* reservaciones,
-                                                   int nReservaciones,
-                                                   int& nDisponibles)*/;
-
     static Alojamiento* filtrarDisponiblesPorFecha(
         Alojamiento* candidatos,
         int nCandidatos,
         const Fecha& fechaEntrada,
         int noches,
-        const Reservacion* reservaciones,  // Cambiado a const
+        const Reservacion* reservaciones,
         int nReservaciones,
         int& nDisponibles
         );
@@ -91,6 +83,8 @@ public:
     // Validar si hay conflicto de fechas
     static bool hayConflictoFechas(const Fecha& fechaEntrada1, int noches1,
                                    const Fecha& fechaEntrada2, int noches2);
+
+    void mostrarDetalle(int numero, bool esParaAnfitrion, Sistema* sistema) const;
 };
 
 #endif // RESERVACION_H

@@ -31,6 +31,8 @@ public:
     bool operator==(const Fecha& otra) const;
     bool operator<(const Fecha& otra) const;
     bool operator>(const Fecha& otra) const;
+    bool operator<=(const Fecha& otra) const;
+    bool operator>=(const Fecha& otra) const;
 
     friend ostream& operator<<(ostream& os, const Fecha& f);
     friend istream& operator>>(istream& is, Fecha& f);
